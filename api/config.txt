@@ -1,6 +1,0 @@
-SERVER_HOST = 0.0.0.0
-SERVER_PORT = 5005
-DB_HOST = niknovikov.ru
-DB_USER = u1528046_nik
-DB_PASSWORD = Criterian21
-DB_NAME = u1528046_test_bd

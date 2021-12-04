@@ -10,21 +10,23 @@ from db.bd_api.exceptions import UserNotFoundException
 from db.bd_api.interaction import DbInteraction
 from utils import config_parser
 
+
 class Server:
-    
-    def __init__ (self, host, port, db_host, db_user, password, db_name):
+
+    def __init__(self, host, port, db_host, db_user, password, db_name):
         self.host = host
         self.port = port
 
         self.db_interaction = DbInteraction(
-            host = db_host,
-            user = db_user,
-            password = password,
-            db_name = db_name,
+            host=db_host,
+            user=db_user,
+            password=password,
+            db_name=db_name,
             rebuild_db=False
         )
 
         self.app = Flask(__name__)
+
         self.app.add_url_rule('/shutdown', view_func=self.shutdown)
         self.app.add_url_rule('/home', view_func=self.get_home)
         self.app.add_url_rule('/', view_func=self.get_home)
@@ -35,21 +37,23 @@ class Server:
         self.app.register_error_handler(404, self.page_not_found)
 
     def page_not_found(self, err_description):
-        return  jsonify(error=str(err_description)), 404
+        return jsonify(error=str(err_description)), 404
 
     def run_server(self):
-        self.server = threading.Thread(target=self.app.run, kwargs={'host': self.host, 'port': self.port})
+        self.server = threading.Thread(target=self.app.run(ssl_context=(
+        '/Users/novikovnikolay/Documents/GitHub/BackendForRFL/cert.pem',
+        '/Users/novikovnikolay/Documents/GitHub/BackendForRFL/key.pem')), kwargs={'host': self.host, 'port': self.port})
         self.server.start()
         return self.server
-        
+
     def shutdown_server(self):
         request.get(f'http://{self.host}:{self.port}/shutdown')
-        
+
     def shutdown(self):
         terminate_function = request.environ.get('werkzeug.server.shutdown')
         if terminate_function:
             terminate_function()
-                
+
     def get_home(self):
         return 'bip-bup-bop...testing'
 
@@ -64,7 +68,7 @@ class Server:
             password=password,
             email=email
         )
-        return f'Succes added {username}',201
+        return f'Succes added {username}', 201
 
     def get_user_info(self, username):
         try:
@@ -90,15 +94,16 @@ class Server:
 
         except UserNotFoundException:
             abort(404, description='User not found')
-        
-if __name__== '__main__':
+
+
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, dest='config')
-    
+
     args = parser.parse_args()
-    
+
     config = config_parser(args.config)
-    
+
     server_host = config['SERVER_HOST']
     server_port = config['SERVER_PORT']
 
@@ -107,13 +112,12 @@ if __name__== '__main__':
     db_password = config['DB_PASSWORD']
     db_name = config['DB_NAME']
 
-    server =  Server(
-        host= server_host,
-        port= server_port,
-        password= db_password,
-        db_name= db_name,
-        db_host= db_host,
-        db_user = db_user
+    server = Server(
+        host=server_host,
+        port=server_port,
+        password=db_password,
+        db_name=db_name,
+        db_host=db_host,
+        db_user=db_user
     )
     server.run_server()
-    
